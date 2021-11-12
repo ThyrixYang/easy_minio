@@ -1,5 +1,8 @@
 This is a wrapper of [minio-py](https://github.com/minio/minio-py).
 
+This package is under active development. 
+If you have any questions, please feel free to open an issue.
+
 ## Features
 
 easy-minio supports following features:
@@ -44,9 +47,3 @@ with mc.open(file_path, "wb") as f:
 res = mc.object_exists(file_path)
 
 ```
-
-
----
-
-TODO:
-1. Write documents.
