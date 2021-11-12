@@ -83,6 +83,7 @@ def test_load_object_cache():
 def test_list_object():
     mc = MinioClient()
     res = mc.list_objects(test_bucket_name, verbose=False)
+    print(res)
 
 
 def test_rw_multiple_objects():

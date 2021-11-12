@@ -275,7 +275,7 @@ class MinioClient:
                 print("bucket_name: {}, is_dir: {}, object_name: {}".format(
                     obj.bucket_name, obj.is_dir, obj.object_name))
             if not obj.is_dir:
-                objs.append(obj.object_name)
+                objs.append("/".join([obj.bucket_name, obj.object_name]))
         return objs
         # print(obj.bucket_name, obj.content_type, obj.etag, obj.is_dir, obj.is_latest, obj.last_modified, obj.metadata, obj.object_name, obj.size, obj.storage_class, obj.version_id)
         # data None None True None None None datasets/ None None None
