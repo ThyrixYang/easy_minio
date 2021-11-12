@@ -60,7 +60,6 @@ def unwrap_get_object_cache(args):
                      access_key=args["access_key"],
                      secret_key=args["secret_key"],
                      cache_path=args["cache_path"])
-    
     return mc._get_object_cache(path=args["file_path"],
                                  refresh=args["refresh"])
 
@@ -116,6 +115,9 @@ class MinioClient:
                 queries.append(query)
             with Pool() as pool:
                 cache_paths = pool.map(unwrap_get_object_cache, queries)
+            # errors = list(filter(lambda x: isinstance(x, Exception), cache_paths))
+            # if len(errors) > 0:
+            #     raise IOError(str(errors))
             # cache_paths = [self._get_object_cache(p,
             #                                     refresh=refresh,
             #                                     verbose=verbose) for p in path]
@@ -135,10 +137,13 @@ class MinioClient:
             bucket, prefix = get_bucket_and_prefix(path)
             if verbose:
                 print("Downloading object {}".format(path))
-            self._client.fget_object(bucket_name=bucket,
-                                     object_name=prefix,
-                                     file_path=str(cache_file_path),
-                                     version_id=version_id)
+            try:
+                self._client.fget_object(bucket_name=bucket,
+                                        object_name=prefix,
+                                        file_path=str(cache_file_path),
+                                        version_id=version_id)
+            except Exception as e:
+                return e
             return str(cache_file_path)
         else:
             return str(cache_file_path)
@@ -172,7 +177,10 @@ class MinioClient:
             with Pool() as pool:
             # with ThreadPool(processes=64) as pool:
                 objs = pool.map(unwrap_load_object_cache, queries)
-            
+                
+            # errors = list(filter(lambda x: isinstance(x, Exception), objs))
+            # if len(errors) > 0:
+            #     raise IOError(str(errors))
             # objs = [self._load_object_cache(p,
             #                                 refresh=refresh,
             #                                 verbose=verbose,
@@ -193,6 +201,8 @@ class MinioClient:
             file_format = infer_format(path)
         object_cache_path = self._get_object_cache(
             path, refresh=refresh, version_id=version_id, verbose=verbose)
+        if isinstance(object_cache_path, Exception):
+            return object_cache_path
         if file_format == "pickle":
             with open(object_cache_path, "rb") as f:
                 return pickle.load(f)
