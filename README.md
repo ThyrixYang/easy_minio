@@ -1,7 +1,7 @@
 This is a wrapper of [minio-py](https://github.com/minio/minio-py).
 
 This package is under active development. 
-If you have any questions, please feel free to open an issue.
+If you have any questions or feature requests, please feel free to open an issue.
 
 ## Features
 
