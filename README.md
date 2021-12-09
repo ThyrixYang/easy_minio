@@ -16,9 +16,16 @@ easy-minio supports following features:
 
 ## Install
 
+### Stable Version
 ```
-python -m pip install git+git://github.com/ThyrixYang/easy_minio.git@main
+python -m pip install --upgrade --no-deps --force-reinstall git+git://github.com/ThyrixYang/easy_minio.git@main
 ```
+
+### Develop Version
+```
+python -m pip install --upgrade --no-deps --force-reinstall git+git://github.com/ThyrixYang/easy_minio.git@dev
+```
+
 ## Usage
 
 There are two approaches to set your accounts:
@@ -49,3 +56,9 @@ with mc.open(file_path, "wb") as f:
 res = mc.object_exists(file_path)
 
 ```
+
+## Change Log
+
+### New in v0.3
+
+1. Auto refresh.

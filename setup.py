@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(name='easy_minio',
-      version='0.2',
+      version='0.3',
       description='A minio python API wrapper',
       author='Thyrix Yang',
       author_email='thyrixyang@gmail.com',
