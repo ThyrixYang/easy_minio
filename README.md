@@ -12,8 +12,10 @@ easy-minio supports following features:
 3. Easy to use open(path, mode) operation to modify file directly.
 4. Parallel objects downloading based on multiprocessing.
 5. Upload or download multiple objects in one function call.
+6. Cross platform support (Windows & Linux).
 
 ## Install
+
 ```
 python -m pip install git+git://github.com/ThyrixYang/easy_minio.git@main
 ```

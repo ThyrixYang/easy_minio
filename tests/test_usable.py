@@ -83,71 +83,32 @@ def test_load_object_cache():
 def test_list_object():
     mc = MinioClient()
     res = mc.list_objects(test_bucket_name, verbose=False)
-    print(res)
+    assert len(res) > 0
 
-
-def test_rw_multiple_objects():
-    mc = MinioClient()
-    num = 1000
-    t1 = time.time()
-    for i in range(num):
-        # msg = "id:{}".format(i)
-        msg = np.random.randn(100, 100)
-        file_path = pathlib.PurePosixPath(
-            test_bucket_name) / "multi/dump_object_{}.pkl".format(i)
-        mc.dump_object_cache(msg, file_path)
-    t2 = time.time()
-    print("put time {}".format(t2 - t1))
-    paths = []
-    for i in range(num):
-        file_path = pathlib.PurePosixPath(
-            test_bucket_name) / "multi/dump_object_{}.pkl".format(i)
-        paths.append(file_path)
-    objs = mc.load_object_cache(paths, refresh=True)
-    print("len ", len(objs))
-    # print(obj)
-    t3 = time.time()
-    print("load object time {}".format(t3 - t2))
-
-
-def test_get_multiple_objects():
-    mc = MinioClient()
-    num = 1000
-    t1 = time.time()
-    paths = []
-    for i in range(num):
-        file_path = pathlib.PurePosixPath(
-            test_bucket_name) / "multi/dump_object_{}.pkl".format(i)
-        paths.append(file_path)
-    cache_paths = mc.get_object_cache(paths, refresh=True)
-    print("len ", len(cache_paths))
-    t2 = time.time()
-    print("get object time {}".format(t2 - t1))
-
-
-def test_get_multiple_objects_error():
-    mc = MinioClient()
-    num = 10
-    paths = []
-    for i in range(num):
-        file_path = pathlib.PurePosixPath(
-            test_bucket_name) / "multi/dump_object_{}_ne.pkl".format(i)
-        paths.append(file_path)
-    try:
-        _ = mc.get_object_cache(paths, refresh=True)
-    except Exception as e:
-        print("{}".format(e))
-
-def test_load_multiple_objects_error():
-    mc = MinioClient()
-    num = 10
-    paths = []
-    for i in range(num):
-        file_path = pathlib.PurePosixPath(
-            test_bucket_name) / "multi/dump_object_{}_ne.pkl".format(i)
-        paths.append(file_path)
-    print(paths)
-    try:
-        _ = mc.load_object_cache(paths, refresh=True)
-    except Exception as e:
-        print("{}".format(e))
+def test_auto_refresh():
+    # auto refresh has resolution = 1 seconds
+    mc1 = MinioClient(disable_auto_refresh=True, cache_path="D:\\tmp\\test_aux_cache") # do not save mtime
+    mc2 = MinioClient()
+    file_path = str(pathlib.PurePosixPath(test_bucket_name) / "text_auto_refresh.pkl")
+    cnt1 = 0
+    for i in range(10):
+        time.sleep(1)
+        mc1.dump_object_cache("a", file_path)
+        s1 = mc2.load_object_cache(file_path, verbose=False)
+        mc1.dump_object_cache("b", file_path)
+        s2 = mc2.load_object_cache(file_path, verbose=False)
+        if s1 == s2 and s1 == "a":
+            cnt1 += 1
+    assert cnt1 >= 9
+    
+    cnt2 = 0
+    for i in range(10):
+        time.sleep(1)
+        mc1.dump_object_cache("a", file_path)
+        s1 = mc2.load_object_cache(file_path, verbose=False)
+        time.sleep(1)
+        mc1.dump_object_cache("b", file_path)
+        s2 = mc2.load_object_cache(file_path, verbose=False)
+        if s1 == "a" and s2 == "b":
+            cnt2 += 1
+    assert cnt2 == 10

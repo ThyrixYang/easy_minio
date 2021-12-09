@@ -10,5 +10,5 @@ setup(name='easy_minio',
       url='https://github.com/ThyrixYang/easy_minio',
       packages=['easy_minio'],
       package_dir={'easy_minio': 'easy_minio'},
-      install_requires=['minio', 'pytest'],
-      )
+      install_requires=['minio', 'pytest', 'sqlitedict'],
+)

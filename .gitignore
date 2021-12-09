@@ -2,3 +2,4 @@ minio_cache/
 local_config.py
 *.egg-info/
 __pycache__/
+.coverage*

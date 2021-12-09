@@ -7,6 +7,7 @@ from multiprocessing import Pool
 from multiprocessing.pool import ThreadPool
 from copy import deepcopy
 
+from sqlitedict import SqliteDict
 from minio import Minio
 
 from .utils import infer_format, get_bucket_and_prefix, create_parent_folder_if_not_exists, is_path
@@ -53,7 +54,9 @@ def unwrap_load_object_cache(args):
     
     return mc._load_object_cache(path=args["file_path"],
                                  refresh=args["refresh"],
-                                 file_format=args["file_format"])
+                                 file_format=args["file_format"],
+                                 version_id=None,
+                                 verbose=False)
     
 def unwrap_get_object_cache(args):
     mc = MinioClient(endpoint=args["endpoint"],
@@ -61,7 +64,9 @@ def unwrap_get_object_cache(args):
                      secret_key=args["secret_key"],
                      cache_path=args["cache_path"])
     return mc._get_object_cache(path=args["file_path"],
-                                 refresh=args["refresh"])
+                                 refresh=args["refresh"],
+                                 version_id=None,
+                                 verbose=False)
 
 class MinioClient:
 
@@ -71,12 +76,14 @@ class MinioClient:
                  secret_key=None,
                  cache_path=None,
                  secure=False,
+                 disable_auto_refresh=False,
                  **kwargs):
         
         self.endpoint = endpoint
         self.access_key = access_key
         self.secret_key = secret_key
         self.cache_path = cache_path
+        self.disable_auto_refresh = disable_auto_refresh
         if endpoint is None:
             self.endpoint = os.environ.get("MINIO_ENDPOINT")
         if access_key is None:
@@ -92,6 +99,11 @@ class MinioClient:
                              secret_key=self.secret_key,
                              secure=secure,
                              **kwargs)
+        self._database_path = str(pathlib.Path(self.cache_path) / "easy_minio.sqlite")
+        if not self.disable_auto_refresh:
+            self._mtime_dict = SqliteDict(filename=self._database_path, 
+                                        tablename="mtime",
+                                        autocommit=True)
         
     def download_object(self,
                         object_path,
@@ -112,7 +124,7 @@ class MinioClient:
 
     def get_object_cache(self,
                          path,
-                         refresh=False,
+                         refresh="auto",
                          version_id=None,
                          verbose=False):
         if is_path(path):
@@ -136,10 +148,22 @@ class MinioClient:
         else:
             raise ValueError()
 
-    def _get_object_cache(self, path, refresh=False, version_id=None, verbose=False):
+    def _get_object_cache(self, path, refresh, version_id, verbose):
         path = str(path).strip("/")
+        bucket, prefix = get_bucket_and_prefix(path)
         cache_file_path = pathlib.Path(self.cache_path) / path
         create_parent_folder_if_not_exists(cache_file_path)
+        
+        if refresh == "auto":
+            if self.disable_auto_refresh:
+                raise ValueError("auto refresh is disabled but refresh is 'auto'")
+            modify_time = self._mtime_dict.get(path, None)
+            stat = self._client.stat_object(bucket, prefix)
+            remote_mtime = str(stat.last_modified.timestamp())
+            if str(remote_mtime) == modify_time:
+                refresh = False
+            else:
+                refresh = True
 
         if refresh and cache_file_path.is_file() and version_id is None:
             os.remove(str(cache_file_path))
@@ -149,6 +173,10 @@ class MinioClient:
                 str(cache_file_path), 
                 version_id=version_id, 
                 verbose=verbose)
+            
+            stat = self._client.stat_object(bucket, prefix)
+            remote_mtime = str(stat.last_modified.timestamp())
+            self._mtime_dict[path] = remote_mtime
             # bucket, prefix = get_bucket_and_prefix(path)
             # if verbose:
             #     print("Downloading object {}".format(path))
@@ -160,13 +188,12 @@ class MinioClient:
             # except Exception as e:
             #     return e
             return res
-            return str(cache_file_path)
         else:
             return str(cache_file_path)
 
     def load_object_cache(self,
                           path,
-                          refresh=False,
+                          refresh="auto",
                           version_id=None,
                           verbose=False,
                           file_format=None):
@@ -199,10 +226,10 @@ class MinioClient:
 
     def _load_object_cache(self,
                            path,
-                           refresh=False,
-                           version_id=None,
-                           verbose=False,
-                           file_format=None):
+                           refresh,
+                           version_id,
+                           verbose,
+                           file_format):
         path = str(path)
         if file_format is None:
             file_format = infer_format(path)
@@ -241,6 +268,10 @@ class MinioClient:
         if verbose:
             print("Putting object {}".format(path))
         self._client.fput_object(bucket, prefix, str(cache_file_path))
+        if not self.disable_auto_refresh:
+            stat = self._client.stat_object(bucket, prefix)
+            remote_mtime = str(stat.last_modified.timestamp())
+            self._mtime_dict[path] = remote_mtime
         return str(cache_file_path)
 
     def object_exists(self, path):
@@ -286,3 +317,7 @@ class MinioClient:
         return objs
         # print(obj.bucket_name, obj.content_type, obj.etag, obj.is_dir, obj.is_latest, obj.last_modified, obj.metadata, obj.object_name, obj.size, obj.storage_class, obj.version_id)
         # data None None True None None None datasets/ None None None
+    
+    def __del__(self):
+        if not self.disable_auto_refresh:
+            self._mtime_dict.close()
