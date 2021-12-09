@@ -8,6 +8,7 @@ from multiprocessing.pool import ThreadPool
 from copy import deepcopy
 
 from sqlitedict import SqliteDict
+import xxhash
 from minio import Minio
 
 from .utils import infer_format, get_bucket_and_prefix, create_parent_folder_if_not_exists, is_path
@@ -67,6 +68,42 @@ def unwrap_get_object_cache(args):
                                  refresh=args["refresh"],
                                  version_id=None,
                                  verbose=False)
+    
+    
+class S3KV:
+    
+    def __init__(self, client, path, conflict_error=False):
+        self.client = client
+        self.path = path
+        self.conflict_error = conflict_error
+        
+    def get_hash(self, k):
+        h = xxhash.xxh64()
+        h.update(k)
+        hash_value = h.hexdigest()
+        return hash_value
+        
+    def put(self, k, v):
+        hash_value = self.get_hash(k)
+        object_name = "k{}.pkl".format(hash_value)
+        object_path = str(pathlib.PurePosixPath(self.path) / object_name)
+        if self.client.object_exists(object_path):
+            if self.conflict_error:
+                raise ValueError("dumping to a existing key: {}".format(object_name))
+            else:
+                warnings.warn("dumping to a existing key: {}".format(object_name))
+        self.client.dump_object_cache({"k": k, "v": v}, object_path)
+    
+    def get(self, k, default=None):
+        hash_value = self.get_hash(k)
+        object_name = "k{}.pkl".format(hash_value)
+        object_path = str(pathlib.PurePosixPath(self.path) / object_name)
+        if self.client.object_exists(object_path):
+            obj_dict = self.client.load_object_cache(object_path)
+            return obj_dict["v"]
+        else:
+            return default
+    
 
 class MinioClient:
 

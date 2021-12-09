@@ -5,6 +5,8 @@ import time
 import numpy as np
 
 from easy_minio import MinioClient
+from easy_minio import S3KV
+
 
 test_bucket_name = "easy-minio-test"
 test_object = {"a": 1, "b": 2}
@@ -84,6 +86,21 @@ def test_list_object():
     mc = MinioClient()
     res = mc.list_objects(test_bucket_name, verbose=False)
     assert len(res) > 0
+    
+def test_kv_store():
+    np.random.seed(0)
+    k1 = np.random.randn(3, 4)
+    v1 = np.random.randn(1, 2)
+    k2 = np.random.randn(2, 1)
+    v2 = np.random.randn(1, 1)
+    client = MinioClient()
+    kv = S3KV(client, path="kv-store/test")
+    kv.put(k1, v1)
+    kv.put(k2, v2)
+    assert np.array_equal(kv.get(k1), v1)
+    assert np.array_equal(kv.get(k2), v2)
+    # print(kv.get(k1))
+    # print(kv.get(k2))
 
 def test_auto_refresh():
     # auto refresh has resolution = 1 seconds
