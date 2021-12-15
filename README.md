@@ -18,12 +18,12 @@ easy-minio supports following features:
 
 ### Stable Version
 ```
-python -m pip install --upgrade --no-deps --force-reinstall git+git://github.com/ThyrixYang/easy_minio.git@main
+python -m pip install --upgrade --force-reinstall git+git://github.com/ThyrixYang/easy_minio.git@main
 ```
 
 ### Develop Version
 ```
-python -m pip install --upgrade --no-deps --force-reinstall git+git://github.com/ThyrixYang/easy_minio.git@dev
+python -m pip install --upgrade --force-reinstall git+git://github.com/ThyrixYang/easy_minio.git@dev
 ```
 
 ## Usage

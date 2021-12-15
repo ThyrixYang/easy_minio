@@ -1,6 +1,7 @@
 import pathlib
 import pickle
 import time
+import os
 
 import numpy as np
 
@@ -129,3 +130,8 @@ def test_auto_refresh():
         if s1 == "a" and s2 == "b":
             cnt2 += 1
     assert cnt2 == 10
+    
+def test_upload_file():
+    mc = MinioClient()
+    r = mc.upload_file(os.path.abspath(__file__), "/tmp/test/test_usable.txt", verbose=True)
+    assert r

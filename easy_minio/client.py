@@ -310,6 +310,24 @@ class MinioClient:
             remote_mtime = str(stat.last_modified.timestamp())
             self._mtime_dict[path] = remote_mtime
         return str(cache_file_path)
+    
+    def upload_file(self,
+                    file_path,
+                    remote_path,
+                    verbose=False):
+        remote_path = str(remote_path)
+        file_path = str(file_path)
+        remote_path = remote_path.strip("/")
+        bucket, prefix = get_bucket_and_prefix(remote_path)
+
+        if verbose:
+            print("Putting object {}".format(file_path))
+        self._client.fput_object(bucket, prefix, file_path)
+        if not self.disable_auto_refresh:
+            stat = self._client.stat_object(bucket, prefix)
+            remote_mtime = str(stat.last_modified.timestamp())
+            self._mtime_dict[remote_path] = remote_mtime
+        return file_path
 
     def object_exists(self, path):
         path = str(path)
