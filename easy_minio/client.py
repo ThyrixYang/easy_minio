@@ -128,6 +128,7 @@ class MinioClient:
             self.secret_key = os.environ.get("MINIO_SECRET_KEY")
         if cache_path is None:
             self.cache_path = os.environ.get("EASY_MINIO_CACHE")
+        self.client_name = os.environ.get("MINIO_NAME")
         assert self.cache_path is not None
         pathlib.Path(self.cache_path).mkdir(parents=True, exist_ok=True)
         self._client = Minio(self.endpoint,
@@ -340,7 +341,7 @@ class MinioClient:
             else:
                 raise e
 
-    def open(self, file_path, mode="r", refresh=True):
+    def open(self, file_path, mode="r", refresh="auto"):
         return Open(self, file_path, mode=mode, refresh=refresh, version_id=None)
     
     def download_sync(self, remote_path, local_path, refresh="auto", verbose=False):

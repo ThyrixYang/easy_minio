@@ -16,12 +16,12 @@ test_object = {"a": 1, "b": 2}
 
 def test_construct():
     mc = MinioClient()
-    mc.make_bucket(test_bucket_name)
+    # mc.make_bucket(test_bucket_name)
 
 
 def test_open_write():
     mc = MinioClient()
-    mc.make_bucket(test_bucket_name)
+    # mc.make_bucket(test_bucket_name)
     file_path = pathlib.PurePosixPath(test_bucket_name) / "text_test.txt"
     with mc.open(file_path, "w") as f:
         f.write("test string")
