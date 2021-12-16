@@ -354,6 +354,13 @@ class MinioClient:
             os.symlink(cache_dir, local_path, target_is_directory=True)
     
     def upload_folder(self, local_path, remote_path, verbose=False):
+        """Note: the same as cp local_path/* remote_path/*, so local_path name is not contained.
+
+        Args:
+            local_path ([type]): [description]
+            remote_path ([type]): [description]
+            verbose (bool, optional): [description]. Defaults to False.
+        """
         remote_path = pathlib.PurePosixPath(remote_path)
         for root, dir_names, file_names in os.walk(local_path):
             r = root.replace(local_path, "")
