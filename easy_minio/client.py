@@ -111,6 +111,7 @@ class MinioClient:
                  access_key=None,
                  secret_key=None,
                  cache_path=None,
+                 client_name=None,
                  secure=False,
                  disable_auto_refresh=False,
                  **kwargs):
@@ -128,7 +129,8 @@ class MinioClient:
             self.secret_key = os.environ.get("MINIO_SECRET_KEY")
         if cache_path is None:
             self.cache_path = os.environ.get("EASY_MINIO_CACHE")
-        self.client_name = os.environ.get("MINIO_NAME")
+        if client_name is None:
+            self.client_name = os.environ.get("MINIO_NAME")
         assert self.cache_path is not None
         pathlib.Path(self.cache_path).mkdir(parents=True, exist_ok=True)
         self._client = Minio(self.endpoint,
