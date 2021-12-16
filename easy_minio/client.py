@@ -353,8 +353,20 @@ class MinioClient:
         else:
             os.symlink(cache_dir, local_path, target_is_directory=True)
     
-    def upload_sync(self, local_path, remote_path, verbose=False):
-        pass
+    def upload_folder(self, local_path, remote_path, verbose=False):
+        remote_path = pathlib.PurePosixPath(remote_path)
+        for root, dir_names, file_names in os.walk(local_path):
+            r = root.replace(local_path, "")
+            if os_name == "Windows":
+                r = r.strip("\\")
+            else:
+                r = r.strip("/")
+            remote_prefix = remote_path / r
+            for fn in file_names:
+                local_file_path = os.path.join(root, fn)
+                remote_file_path = str(remote_prefix / fn)
+                self.upload_file(local_file_path, remote_file_path, verbose=verbose)
+                print(r, dir_names, file_names)
 
     # def make_bucket(self, bucket, exist_ok=True):
     #     if self._client.bucket_exists(bucket):

@@ -144,3 +144,8 @@ def test_download_sync():
         r = mc.download_sync("/data/tmp", "D:\\tmp\\sync", verbose=True)
     else:
         r = mc.download_sync("/data/tmp", "./tmp", verbose=True)
+        
+        
+def test_upload_folder():
+    mc = MinioClient()
+    mc.upload_folder("D:\\tmp\\data\\inverse_design", "/tmp/upload_folder_test", verbose=True)
