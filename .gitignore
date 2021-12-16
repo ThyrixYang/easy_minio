@@ -3,3 +3,4 @@ local_config.py
 *.egg-info/
 __pycache__/
 .coverage*
+tmp/

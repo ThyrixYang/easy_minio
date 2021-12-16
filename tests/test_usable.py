@@ -135,3 +135,8 @@ def test_upload_file():
     mc = MinioClient()
     r = mc.upload_file(os.path.abspath(__file__), "/tmp/test/test_usable.txt", verbose=True)
     assert r
+    
+    
+def test_download_sync():
+    mc = MinioClient()
+    r = mc.download_sync("/data/tmp", "D:\\tmp\\sync", verbose=True)

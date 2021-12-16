@@ -1,5 +1,7 @@
 import pathlib
+import platform
 
+os_name = platform.system()
 
 def infer_format(path):
     extension = path.split(".")[-1]

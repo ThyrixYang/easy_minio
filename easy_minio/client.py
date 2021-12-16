@@ -4,15 +4,14 @@ import pickle
 from typing import Iterable
 import warnings
 from multiprocessing import Pool
-from multiprocessing.pool import ThreadPool
-from copy import deepcopy
+import shutil
+
 
 from sqlitedict import SqliteDict
 import xxhash
 from minio import Minio
 
-from .utils import infer_format, get_bucket_and_prefix, create_parent_folder_if_not_exists, is_path
-
+from .utils import infer_format, get_bucket_and_prefix, create_parent_folder_if_not_exists, is_path, os_name
 
 class Open:
     def __init__(self, easy_client, file_path, mode="r", refresh=True, version_id=None):
@@ -343,15 +342,28 @@ class MinioClient:
 
     def open(self, file_path, mode="r", refresh=True):
         return Open(self, file_path, mode=mode, refresh=refresh, version_id=None)
-
-    def make_bucket(self, bucket, exist_ok=True):
-        if self._client.bucket_exists(bucket):
-            if exist_ok:
-                return
-            else:
-                raise ValueError()
+    
+    def download_sync(self, remote_path, local_path, refresh="auto", verbose=False):
+        objs = self.list_objects(remote_path, verbose=verbose)
+        _ = self.get_object_cache(objs, verbose=verbose, refresh=refresh)
+        cache_dir = pathlib.Path(self.cache_path) / remote_path.strip("/")
+        if os_name == "Windows":
+            warnings.warn("on windows sync is done by simply copy cache")
+            shutil.copytree(str(cache_dir), str(local_path), dirs_exist_ok=True)
         else:
-            self._client.make_bucket(bucket)
+            os.symlink(cache_dir, local_path, target_is_directory=True)
+    
+    def upload_sync(self, local_path, remote_path, verbose=False):
+        pass
+
+    # def make_bucket(self, bucket, exist_ok=True):
+    #     if self._client.bucket_exists(bucket):
+    #         if exist_ok:
+    #             return
+    #         else:
+    #             raise ValueError()
+    #     else:
+    #         self._client.make_bucket(bucket)
 
     def list_objects(self, path, recursive=True, verbose=False):
         bucket, prefix = get_bucket_and_prefix(path)
