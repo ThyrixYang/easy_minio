@@ -36,6 +36,8 @@ class Open:
             if self.easy_client.object_exists(file_path):
                 self.easy_client.get_object_cache(
                     file_path, refresh=refresh, version_id=version_id)
+            else:
+                self.cache_file_path.unlink(missing_ok=True)
 
     def __enter__(self):
         self.file = open(str(self.cache_file_path), self.mode)

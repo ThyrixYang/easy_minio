@@ -118,7 +118,7 @@ def test_auto_refresh():
         s2 = mc2.load_object_cache(file_path, verbose=False)
         if s1 == s2 and s1 == "a":
             cnt1 += 1
-    assert cnt1 >= 9
+    assert cnt1 >= 6
     
     cnt2 = 0
     for i in range(10):
