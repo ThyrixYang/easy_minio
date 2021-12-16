@@ -24,9 +24,10 @@ class Open:
         self.cache_file_path = pathlib.Path(self.easy_client.cache_path) / path
         create_parent_folder_if_not_exists(self.cache_file_path)
         self.bucket, self.prefix = get_bucket_and_prefix(path)
-        if ("r" in mode or "a" in mode) and not refresh:
-            warnings.warn(
-                "on file '{}', reading or appending with refresh=False, the file may be stale".format(file_path))
+        assert refresh
+        # if ("r" in mode or "a" in mode) and not refresh:
+        #     warnings.warn(
+        #         "on file '{}', reading or appending with refresh=False, the file may be stale".format(file_path))
         if version_id is not None and "r" not in mode:
             raise ValueError()
         if "r" in mode:
@@ -358,7 +359,7 @@ class MinioClient:
         else:
             os.symlink(cache_dir, local_path, target_is_directory=True)
     
-    def upload_folder(self, local_path, remote_path, verbose=False):
+    def upload_folder(self, local_path, remote_path, ignore_exists=True, verbose=False):
         """Note: the same as cp local_path/* remote_path/*, so local_path name is not contained.
 
         Args:
@@ -377,6 +378,8 @@ class MinioClient:
             for fn in file_names:
                 local_file_path = os.path.join(root, fn)
                 remote_file_path = str(remote_prefix / fn)
+                if self.object_exists(remote_file_path) and ignore_exists:
+                    continue
                 self.upload_file(local_file_path, remote_file_path, verbose=verbose)
                 if verbose:
                     print("uploading ", r, dir_names, file_names)
