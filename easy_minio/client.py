@@ -373,7 +373,8 @@ class MinioClient:
                 local_file_path = os.path.join(root, fn)
                 remote_file_path = str(remote_prefix / fn)
                 self.upload_file(local_file_path, remote_file_path, verbose=verbose)
-                print(r, dir_names, file_names)
+                if verbose:
+                    print("uploading ", r, dir_names, file_names)
 
     # def make_bucket(self, bucket, exist_ok=True):
     #     if self._client.bucket_exists(bucket):
