@@ -348,7 +348,7 @@ class MinioClient:
         _ = self.get_object_cache(objs, verbose=verbose, refresh=refresh)
         cache_dir = pathlib.Path(self.cache_path) / remote_path.strip("/")
         if os_name == "Windows":
-            warnings.warn("on windows sync is done by simply copy cache")
+            warnings.warn("on windows sync is done by simply copy cache, thus not fully supported")
             shutil.copytree(str(cache_dir), str(local_path), dirs_exist_ok=True)
         else:
             os.symlink(cache_dir, local_path, target_is_directory=True)
