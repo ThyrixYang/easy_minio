@@ -7,6 +7,7 @@ import numpy as np
 
 from easy_minio import MinioClient
 from easy_minio import S3KV
+from easy_minio.utils import os_name
 
 
 test_bucket_name = "easy-minio-test"
@@ -139,4 +140,7 @@ def test_upload_file():
     
 def test_download_sync():
     mc = MinioClient()
-    r = mc.download_sync("/data/tmp", "D:\\tmp\\sync", verbose=True)
+    if os_name == "Windows":
+        r = mc.download_sync("/data/tmp", "D:\\tmp\\sync", verbose=True)
+    else:
+        r = mc.download_sync("/data/tmp", "./tmp", verbose=True)
