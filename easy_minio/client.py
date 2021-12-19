@@ -357,6 +357,8 @@ class MinioClient:
             warnings.warn("on windows sync is done by simply copy cache, thus not fully supported")
             shutil.copytree(str(cache_dir), str(local_path), dirs_exist_ok=True)
         else:
+            if os.path.islink(local_path):
+                os.unlink(local_path)
             os.symlink(cache_dir, local_path, target_is_directory=True)
     
     def upload_folder(self, local_path, remote_path, ignore_exists=True, verbose=False):
