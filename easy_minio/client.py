@@ -105,6 +105,17 @@ class S3KV:
             return obj_dict["v"]
         else:
             return default
+
+    def get_kv(self, k):
+        hash_value = self.get_hash(k)
+        object_name = "k{}.pkl".format(hash_value)
+        object_path = str(pathlib.PurePosixPath(self.path) / object_name)
+        if self.client.object_exists(object_path):
+            obj_dict = self.client.load_object_cache(object_path)
+            return obj_dict["k"], obj_dict["v"]
+        else:
+            return None, None
+
     
 
 class MinioClient:
